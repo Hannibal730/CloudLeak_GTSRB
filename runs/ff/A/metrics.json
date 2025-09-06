@@ -1,0 +1,12 @@
+{
+  "attack": "ff",
+  "budget": "A",
+  "seed": 0,
+  "seed_queries": 43,
+  "total_queries": 430,
+  "update_every": 128,
+  "epochs_per_update": 1,
+  "accuracy": 0.2465,
+  "ATE": 0.754,
+  "ff_chunk": 8
+}
