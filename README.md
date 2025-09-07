@@ -17,3 +17,5 @@ python main.py --data_dir ./data/GTSRB --attack ff --budget B   --oracle_weights
 
 python main.py --data_dir ./data/GTSRB --attack ff --budget C   --oracle_weights models_ckpt/resnet50_gtsrb.pth   --seed_q 70 --update_every 128 --epochs_per_update 1
 
+
+fill models_ckpt, data
