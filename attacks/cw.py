@@ -2,58 +2,64 @@
 import torch
 import torch.nn.functional as F
 
-IMAGENET_STD = torch.tensor([0.229, 0.224, 0.225]).view(1,3,1,1)
+@torch.no_grad()
+def _max_except_y(logits: torch.Tensor, y: torch.Tensor):
+    tmp = logits.clone()
+    tmp.scatter_(1, y.view(-1, 1), float("-inf"))
+    other_max, _ = tmp.max(dim=1)
+    return other_max
 
-def cw_margin_loss(logits, y, kappa=0.0):
-    """
-    Untargeted CW margin: max( z_y - max_{i != y} z_i + kappa, 0 )
-    값을 '작게' 만들수록 y가 top1이 아니게 됨.
-    """
-    b = logits.size(0)
-    real = logits.gather(1, y.view(-1,1)).squeeze(1)
-    # y 위치를 -inf로 만들어 '다른 클래스' 최댓값만 선택
-    mask = torch.zeros_like(logits)
-    mask.scatter_(1, y.view(-1,1), float('-inf'))
-    other, _ = (logits + mask).max(1)
+def cw_margin_loss(logits: torch.Tensor, y: torch.Tensor, kappa: float = 0.0):
+    real = logits.gather(1, y.view(-1, 1)).squeeze(1)
+    other = _max_except_y(logits, y)
     return torch.relu(real - other + kappa).mean()
 
-def cw_linf_attack(
-    x, y, model,
-    eps_pixel=8/255,         # L∞ 예산 (픽셀 스케일)
-    alpha_pixel=2/255,       # 스텝 크기 (픽셀 스케일)
-    iters=50,
-    kappa=0.0,
+def cw_l2_attack(
+    x: torch.Tensor,
+    y: torch.Tensor,
+    model: torch.nn.Module,
+    c: float = 1e-2,
+    steps: int = 200,
+    lr: float = 5e-3,
+    kappa: float = 0.0,
     clamp_fn=None,
-    min_iters=10             # 너무 일찍 멈추지 않게 최소 스텝 보장
+    min_steps: int = 50,
+    early_stop: bool = True
 ):
-    """
-    CW(L∞): CW margin loss로 업데이트, 매 스텝 L∞-ball 투영 + box clamp
-    - y: '멀어지고 싶은' 레이블 (여기선 학생의 현재 예측을 사용)
-    """
-    device = x.device
-    std   = IMAGENET_STD.to(device)
-    eps   = eps_pixel   / std
-    alpha = alpha_pixel / std
+    delta = torch.zeros_like(x, requires_grad=True)
+    opt = torch.optim.Adam([delta], lr=lr)
 
-    x_adv = x.clone().detach()
-    for t in range(iters):
-        x_adv.requires_grad_(True)
+    best_adv = x.clone()
+    best_obj = torch.full((x.size(0),), float("inf"), device=x.device)
+
+    for t in range(steps):
+        x_adv = x + delta
         logits = model(x_adv)
-        loss = cw_margin_loss(logits, y, kappa=kappa)
-        grad = torch.autograd.grad(loss, x_adv)[0]
+
+        l2 = (delta.pow(2).flatten(1).sum(dim=1))
+        margin = cw_margin_loss(logits, y, kappa)
+        obj = l2.mean() + c * margin
+
+        opt.zero_grad(set_to_none=True)
+        obj.backward()
+        opt.step()
 
         with torch.no_grad():
-            x_adv = x_adv + alpha * grad.sign()   # CW loss로 ascent
-            # 원본 around L∞ projection
-            x_adv = torch.min(torch.max(x_adv, x - eps), x + eps)
             if clamp_fn is not None:
-                x_adv = clamp_fn(x_adv)
+                x_adv = clamp_fn(x + delta)
+                delta.data.copy_(x_adv - x)
 
-        # 조기 종료: 충분히 y에서 벗어났으면 종료 (min_iters 뒤부터)
-        if t+1 >= min_iters:
-            with torch.no_grad():
+            logits = model(x + delta)
+            l2_now = (delta.pow(2).flatten(1).sum(dim=1))
+            margin_now = cw_margin_loss(logits, y, kappa).detach()
+            obj_now = l2_now + c * margin_now
+            upd = obj_now < best_obj
+            best_obj[upd] = obj_now[upd]
+            best_adv[upd] = (x + delta)[upd]
+
+            if early_stop and (t + 1) >= min_steps:
                 pred = logits.argmax(1)
-                if (pred != y).all():
+                if (pred != y).all() and margin_now.item() == 0.0:
                     break
 
-    return x_adv.detach()
+    return best_adv.detach()
