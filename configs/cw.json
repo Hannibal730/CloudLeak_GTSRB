@@ -1,5 +1,6 @@
 {
-  "kappa": 0.0,
-  "max_steps": 200,
-  "lr": 0.05
+  "epsilon": 0.031372549,    
+  "alpha":   0.007843137,    
+  "iters":   50,
+  "kappa":   0.0
 }
