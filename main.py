@@ -10,9 +10,9 @@ if __name__ == "__main__":
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--qpool", type=int, default=6000)
     ap.add_argument("--dtest", type=int, default=2000)
-    ap.add_argument("--seed_q", type=int, default=200)
+    ap.add_argument("--seed_q", type=int, default=70)
     ap.add_argument("--update_every", type=int, default=128)
-    ap.add_argument("--epochs_per_update", type=int, default=3)
+    ap.add_argument("--epochs_per_update", type=int, default=1)
     ap.add_argument("--batch_update", type=int, default=64)
     args=ap.parse_args()
     res = run_experiment(

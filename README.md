@@ -9,6 +9,11 @@
 
 python -m oracle.train_oracle   --data_dir ./data/GTSRB   --epochs 2   --out models_ckpt/resnet50_gtsrb.pth
 
-python main.py --data_dir ./data/GTSRB --attack ff --budget A   --oracle_weights models_ckpt/resnet50_gtsrb.pth   --seed_q 43 --update_every 128 --epochs_per_update 1
-
 python scripts/evaluate.py --data_dir ./data/GTSRB --ckpt runs/ff/C/student.pth 
+
+python main.py --data_dir ./data/GTSRB --attack ff --budget A   --oracle_weights models_ckpt/resnet50_gtsrb.pth   --seed_q 70 --update_every 128 --epochs_per_update 1
+
+python main.py --data_dir ./data/GTSRB --attack ff --budget B   --oracle_weights models_ckpt/resnet50_gtsrb.pth   --seed_q 70 --update_every 128 --epochs_per_update 1
+
+python main.py --data_dir ./data/GTSRB --attack ff --budget C   --oracle_weights models_ckpt/resnet50_gtsrb.pth   --seed_q 70 --update_every 128 --epochs_per_update 1
+

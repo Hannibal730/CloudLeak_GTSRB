@@ -105,8 +105,8 @@ def run_experiment(
 
     # ==== 실험 프로토콜(논문 분위기에 맞춘 기본값) ====
     selector: str = "lc",       # 'lc' | 'rs'
-    seed_q: int = 86,           # 시드 질의 수
-    update_every: int = 512,    # 업데이트 주기 (완화: 과도 상승 방지)
+    seed_q: int = 70,           # 시드 질의 수
+    update_every: int = 128,    # 업데이트 주기 (완화: 과도 상승 방지)
     epochs_per_update: int = 1,
     batch_update: int = 64
 ):

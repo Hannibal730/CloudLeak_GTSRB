@@ -3,5 +3,3 @@
 *.pth
 /docs
 *.pyc
-attacks/__pycache__/
-__pycache__/
