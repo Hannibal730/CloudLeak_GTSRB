@@ -1,12 +1,15 @@
 {
   "attack": "ff",
   "budget": "A",
+  "selector": "lc",
   "seed": 0,
-  "seed_queries": 70,
-  "total_queries": 430,
   "update_every": 128,
   "epochs_per_update": 1,
-  "accuracy": 0.324,
-  "ATE": 0.677,
-  "ff_chunk": 8
+  "accuracy": 0.548,
+  "ATE": 0.4545,
+  "seed_queries": 70,
+  "total_queries": 430,
+  "ff_chunk": 8,
+  "alpha_ff": 0.5,
+  "bank_cap": 50
 }

@@ -1,5 +1,7 @@
 {
-  "max_iter": 200,
-  "alpha_triplet": 0.5,
-  "lambda_triplet": 0.001
+  "max_iter": 300,
+  "lambda_reg": 1e-5,
+  "alpha": 0.5,
+  "ff_chunk": 8,
+  "bank_cap": 50
 }
